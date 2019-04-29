@@ -17,6 +17,7 @@ var controller = {
 
     saveProject: function(req, res){
         var project = new Project();
+        
 
         var params = req.body
 
@@ -25,7 +26,15 @@ var controller = {
         project.year = params.year;
         project.category = params.category;
         project.langs = params.langs;
-        project.image = null;
+        if(req.files){
+            var filePath = req.files.image.path;
+            var fileName = filePath.split('\\');
+            fileName = fileName[1];
+            project.image = fileName;
+        }else{
+            project.image = null;
+        }
+        
 
         project.save((err, projectStoraged) => {
             if(err) return res.status(500).send({message: "An error has occurred while saving document.", error: err});
@@ -84,6 +93,28 @@ var controller = {
 
             return res.status(200).send({project: projectDeleted});
         })
+    }, 
+
+    uploadImgToProject: function(req, res) {
+        var projectId = req.params.id;
+        
+        if(req.files){
+            var filePath = req.files.image.path;
+            var fileName = filePath.split('\\');
+            fileName = fileName[1];
+            Project.findByIdAndUpdate(projectId, {image: fileName}, {new: true}, (err, projectUpdated) => {
+                if(err) return res.status(500).send({message: "An error has ocurred.", error: err});
+
+                if(!projectUpdated) return res.status(404).send({message: "Project not found."});
+
+                return res.status(200).send({
+                    project: projectUpdated
+                })
+
+            })
+        }else{
+            return res.status(500).send({message: "No image was submitted."});
+        }
     }
     
 }
