@@ -2,6 +2,8 @@
 
 var Project = require('../models/projects')
 
+var fs = require('fs');
+
 var controller = {
     home: function(req, res){
         return res.status(200).send({
@@ -30,7 +32,15 @@ var controller = {
             var filePath = req.files.image.path;
             var fileName = filePath.split('\\');
             fileName = fileName[1];
-            project.image = fileName;
+            if(ext == 'jpg' || ext == 'gif' || ext == 'jpeg' || ext == 'png'){
+                project.image = fileName;
+            }else{
+                project.image = null;
+                fs.unlink(filePath, (err) => {
+                    return res.status(200).send({ message: "Invalid extension"});
+                })
+            }
+            
         }else{
             project.image = null;
         }
@@ -102,16 +112,22 @@ var controller = {
             var filePath = req.files.image.path;
             var fileName = filePath.split('\\');
             fileName = fileName[1];
-            Project.findByIdAndUpdate(projectId, {image: fileName}, {new: true}, (err, projectUpdated) => {
-                if(err) return res.status(500).send({message: "An error has ocurred.", error: err});
+            var ext = fileName.split('.');
+            if(ext == 'jpg' || ext == 'gif' || ext == 'jpeg' || ext == 'png'){
+                Project.findByIdAndUpdate(projectId, {image: fileName}, {new: true}, (err, projectUpdated) => {
+                    if(err) return res.status(500).send({message: "An error has ocurred.", error: err});
 
-                if(!projectUpdated) return res.status(404).send({message: "Project not found."});
+                    if(!projectUpdated) return res.status(404).send({message: "Project not found."});
 
-                return res.status(200).send({
-                    project: projectUpdated
+                    return res.status(200).send({
+                        project: projectUpdated
+                    })
                 })
-
-            })
+            }else{
+                fs.unlink(filePath);
+                return res.status(406).send({message: "Invalid extension."});
+            }
+            
         }else{
             return res.status(500).send({message: "No image was submitted."});
         }
