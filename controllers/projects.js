@@ -59,6 +59,31 @@ var controller = {
 
             return res.status(200).send({projects});
         })
+    },
+
+    updateProject: function(req, res) {
+        var projectId = req.params.id;
+        var newProject = req.body;
+
+        Project.findByIdAndUpdate(projectId, newProject, {new: true}, (err, projectUpdated) => { //new: true is for returning the updated project with the new data.
+            if(err) return res.status(500).send({message: "An error has ocurred."});
+
+            if(!projectUpdated) return res.status(404).send({message: "Project to update not found."});
+
+            return res.status(200).send({project: projectUpdated});
+        })
+    },
+
+    deleteProject: function(req, res) {
+        var projectId = req.params.id;
+
+        Project.findByIdAndDelete(projectId, (err, projectDeleted) => { //new: true is for returning the updated project with the new data.
+            if(err) return res.status(500).send({message: "An error has ocurred.", error: err});
+
+            if(!projectDeleted) return res.status(404).send({message: "Project to delete not found."});
+
+            return res.status(200).send({project: projectDeleted});
+        })
     }
     
 }
